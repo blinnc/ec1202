@@ -3,7 +3,9 @@ local character = display.newImage( "panda.jpg", 170, 250)
 
 local tPrevious = system.getTimer()
 local jumping = false
+local slashing = false
 local up = false
+local down = false
 
 local function move(event)
 	local tDelta = event.time - tPrevious
@@ -17,16 +19,18 @@ local function move(event)
 		cityBack:translate ( 240 , 0)
 	end
 	if jumping == true then
-		if up == true then
+		if down == false then
 			character.y = character.y - 10
 			if character.y < 130 then
 				up = false
+				down = true
 			end
 		end
-		if up == false then
+		if down == true then
 			character.y = character.y + 10
 			if character.y > 250 then
 				jumping = false
+				down = false
 			end
 		end
 	end
@@ -35,10 +39,17 @@ end
 local function onTouch(event)
 	local phase = event.phase
 	if phase == "ended" then
-		print("touch detected")
-		jumping = true
-		up = true
+		if slashing == false then
+			print("jumping")
+			jumping = true
+		else
+			slashing = false
 		end
+	end
+	if phase == "moved" then
+		slashing = true
+		print("slashing")
+	end
 	return true
 end
 
