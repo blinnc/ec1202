@@ -1,6 +1,6 @@
 local physics = require( "physics" )
 physics.start()
-physics.setGravity( 0, 35)
+physics.setGravity( 0, 98)
 
 --draw the characters
 local cityBack = display.newImage( "cityScape.jpg")
@@ -27,7 +27,7 @@ cityBack3.x = cityBack.x - cityBack.contentWidth
 physics.addBody( ground, "static", { friction=0.5, bounce=0.0 } )
 physics.addBody( ground2, "static", { friction=0.5, bounce=0.0 } )
 physics.addBody( ground3, "static", { friction=0.5, bounce=0.0 } )
-physics.addBody( character, { density=10.0, friction=0.5, bounce=0.0 } )
+physics.addBody( character, { density=3.0, friction=0.3, bounce=0.0 } )
 character.isFixedRotation = true
 
 --variables: booleans for tracking jumping and timer for moving the backgrounds
@@ -49,7 +49,7 @@ local function redraw(event)
 	s = s + 5
 	score.text = "Score: " .. s
 	
-	if character.x < -character.contentWidth * 3 or character.y > display.contentHeight then
+	if character.x < -character.contentWidth * 3 or character.y > display.contentHeight * 3 then
 		character.x = 170
 		character.y = -10
 		s = 0
@@ -139,7 +139,7 @@ local function redraw(event)
 end
 
 local function spawnCrate()
-	local crate = display.newImage( "crate.png", math.random(200) + 400, -100)
+	local crate = display.newImage( "crate.png", math.random(200) + 400, -50)
 	crate.rotation = 10
 	physics.addBody( crate, { density=2.0, friction=0.0, bounce = .4 } )
 	crate:setLinearVelocity( -250, 0)
@@ -179,7 +179,7 @@ local function tap(event)
 		jumpCount = 0
 	end
 	if jumpCount < 2 then
-		character:setLinearVelocity(0 , -450)
+		character:setLinearVelocity(0 , -800)
 		jumpCount = jumpCount + 1
 	end
 	return true
