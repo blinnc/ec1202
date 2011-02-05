@@ -1,18 +1,19 @@
 local physics = require( "physics" )
 physics.start()
+physics.setGravity( 0, 35)
 
 --draw the characters
 local cityBack = display.newImage( "cityScape.jpg", 0, 0)
-local character = display.newImage( "panda.jpg", 170, 50)
-local crate = display.newImage( "smallcrate.jpg", 250, 100)
+local character = display.newImage( "panda.jpg", 170, 200)
+local crate = display.newImage( "smallcrate.jpg", 350, 100)
 local ground = display.newImage( "ground.png" )
 ground.x = display.contentWidth / 2
 ground.y = 320
 ground.myName = ground
 
 physics.addBody( ground, "static", { friction=0.5, bounce=0.0 } )
-physics.addBody( crate, { density=10.0, friction=10.0, bounce=0.0 } )
-physics.addBody( character, { density=10.0, friction=10.0, bounce=0.0 } )
+physics.addBody( crate, { density=3.0, friction=0.5, bounce=0.0 } )
+physics.addBody( character, { density=3.0, friction=0.5, bounce=0.0 } )
 
 --variables: booleans for tracking jumping and timer for moving the backgrounds
 local tPrevious = system.getTimer()
@@ -21,8 +22,10 @@ local slashing = false
 local up = false
 local down = false
 --initial vertical speed for jumping
-local yInitial = 30
+local yInitial = 40
 local yChange = 4
+
+character.angularDamping = 1000
 
 --redraw function that constantly updates all of the graphics
 local function redraw(event)
@@ -42,24 +45,29 @@ local function redraw(event)
 	end
 	
 	--crate.x = crate.x - 5
+	crate.x = crate.x - 5
 	
 	--if a jump has been detected
 	if jumping == true then
 		
-		if down == false then
+		--if down == false then
 			--character.y = character.y - 10
 			yInitial = yInitial - yChange
 			character.y = character.y - yInitial
+			if(yInitial <= 0) then
+				jumping = false
+				yInitial = 40
+			end
 			--if character.y < 130 then
 				--up = false
 				--down = true
 			--end
 			if character.y >= 250 then
-				yInitial = 30
+				yInitial = 40
 				jumping = false
 				character.y = 250
 			end
-		end
+		--end
 		--translate down when he is jumping down
 		--if down == true then
 			--character.y = character.y + 10
