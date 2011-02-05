@@ -11,6 +11,7 @@ local ground = display.newImage( "ground.png" )
 local ground2 = display.newImage( "ground.png" )
 local ground3 = display.newImage( "ground.png" )
 local s = 0
+local jumpCount = 0
 local score = display.newText("Score: " .. s, display.contentWidth - 70, 0, native.systemFont, 20)
 score:setTextColor(0, 0, 255)
 ground.x = 0
@@ -26,7 +27,7 @@ cityBack3.x = cityBack.x - cityBack.contentWidth
 physics.addBody( ground, "static", { friction=0.5, bounce=0.0 } )
 physics.addBody( ground2, "static", { friction=0.5, bounce=0.0 } )
 physics.addBody( ground3, "static", { friction=0.5, bounce=0.0 } )
-physics.addBody( character, { density=3.0, friction=0.5, bounce=0.0 } )
+physics.addBody( character, { density=10.0, friction=0.5, bounce=0.0 } )
 character.isFixedRotation = true
 
 --variables: booleans for tracking jumping and timer for moving the backgrounds
@@ -155,7 +156,7 @@ local function onTouch(event)
 		if slashing == false then
 			--we jump!
 			print("jumping")
-			jumping = true
+			--jumping = true
 		else
 			slashing = false
 		end
@@ -169,6 +170,22 @@ local function onTouch(event)
 	return true
 end
 
+local function tap(event)
+	print("tapped!")
+	local vx, vy
+	vx, vy = character:getLinearVelocity()
+	print(vy)
+	if vy >= 0 and vy < 30 then
+		jumpCount = 0
+	end
+	if jumpCount < 2 then
+		character:setLinearVelocity(0 , -450)
+		jumpCount = jumpCount + 1
+	end
+	return true
+end
+
 Runtime:addEventListener("enterFrame",redraw)
 -- look into the "tap" event for jumping
+Runtime:addEventListener("tap", tap)
 Runtime:addEventListener("touch",onTouch)
