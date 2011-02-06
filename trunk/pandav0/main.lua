@@ -40,7 +40,10 @@ local down = false
 local yInitial = 40
 local yChange = 4
 
+numCrates = 0
+
 local t = {}
+crates = {}
 
 --redraw function that constantly updates all of the graphics
 local function redraw(event)
@@ -139,13 +142,21 @@ local function redraw(event)
 end
 
 local function spawnCrate()
-	local crate = display.newImage( "crate.png", math.random(200) + 400, -50)
+	numCrates = numCrates + 1
+	crate = display.newImage( "crate.png", math.random(200) + 400, -50)
 	crate.rotation = 10
 	physics.addBody( crate, { density=2.0, friction=0.0, bounce = .4 } )
 	crate:setLinearVelocity( -250, 0)
+	table.insert(crates, crate)
 end
 
-timer.performWithDelay ( 1000, spawnCrate, 100 )
+local function removeCrate()
+	for index,crate in ipairs(crates) do
+		if crate.x < 0 then
+			table.remove(crates, index)
+		end
+	end
+end
 
 local function onTouch(event)
 	--get the phase of the event
@@ -184,6 +195,9 @@ local function tap(event)
 	end
 	return true
 end
+
+timer.performWithDelay ( 1000, spawnCrate, 100 )
+timer.performWithDelay ( 5000, removeCrate, 100 )
 
 Runtime:addEventListener("enterFrame",redraw)
 -- look into the "tap" event for jumping
