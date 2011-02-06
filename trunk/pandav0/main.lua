@@ -27,9 +27,9 @@ cityBack3.x = cityBack.x - cityBack.contentWidth
 physics.addBody( ground, "static", { friction=0.5, bounce=0.0 } )
 physics.addBody( ground2, "static", { friction=0.5, bounce=0.0 } )
 physics.addBody( ground3, "static", { friction=0.5, bounce=0.0 } )
-physics.addBody( character, { density=3.0, friction=0.3, bounce=0.0 } )
+physics.addBody( character, { density=0, friction=0.5, bounce=0.0 } )
 character.isFixedRotation = true
-
+ 
 --variables: booleans for tracking jumping and timer for moving the backgrounds
 local tPrevious = system.getTimer()
 local jumping = false
@@ -64,13 +64,13 @@ local function redraw(event)
 	local xOffset = ( 1 * tDelta )
 	
 	--translate the background
-	cityBack.x = cityBack.x - xOffset*0.1
-	cityBack2.x = cityBack2.x - xOffset*0.1
-	cityBack3.x = cityBack3.x - xOffset*0.1
+	cityBack.x = cityBack.x - xOffset * 0.1
+	cityBack2.x = cityBack2.x - xOffset * 0.1
+	cityBack3.x = cityBack3.x - xOffset * 0.1
 	
-	ground.x = ground.x - xOffset *.1
-	ground2.x = ground2.x - xOffset *.1
-	ground3.x = ground3.x - xOffset *.1
+	ground.x = ground.x - xOffset * .1
+	ground2.x = ground2.x - xOffset * .1
+	ground3.x = ground3.x - xOffset * .1
 	
 	--if the background is too far over...
 	if cityBack.x < -cityBack.contentWidth then
@@ -107,52 +107,24 @@ local function redraw(event)
 	--crate.x = crate.x - xOffset*0.1
 	
 	--if a jump has been detected
-	if jumping == true then
-		
-		--if down == false then
-			--character.y = character.y - 10
-			yInitial = yInitial - yChange
-			character.y = character.y - yInitial
-			if(yInitial <= 0) then
-				jumping = false
-				yInitial = 40
-			end
-			--if character.y < 130 then
-				--up = false
-				--down = true
-			--end
-			if character.y >= 250 then
-				yInitial = 40
-				jumping = false
-				character.y = 250
-			end
-		--end
-		--translate down when he is jumping down
-		--if down == true then
-			--character.y = character.y + 10
-			--yInitial = yInitial + 1
-			--character.y = character.y + yInitial
-			--if character.y > 250 then
-				--jumping = false
-				--down = false
-				--yInitial = 15
-			--end
-		--end
+	
+	for index,crate in ipairs(crates) do
+		crate.x = crate.x - xOffset*0.1
 	end
 end
 
 local function spawnCrate()
 	numCrates = numCrates + 1
-	crate = display.newImage( "crate.png", math.random(200) + 400, -50)
+	crate = display.newImage( "crate.png", math.random(400) + 600, -50)
 	crate.rotation = 10
-	physics.addBody( crate, { density=2.0, friction=0.0, bounce = .4 } )
-	crate:setLinearVelocity( -250, 0)
+	physics.addBody( crate, { density=1.0, friction=10.0, bounce = .01 } )
+	crate:setLinearVelocity( -100, 0)
 	table.insert(crates, crate)
 end
 
 local function removeCrate()
 	for index,crate in ipairs(crates) do
-		if crate.x < 0 then
+		if crate.x < -100  then
 			table.remove(crates, index)
 		end
 	end
@@ -166,7 +138,7 @@ local function onTouch(event)
 		--if we never saw a slash...
 		if slashing == false then
 			--we jump!
-			print("jumping")
+			--print("jumping")
 			--jumping = true
 		else
 			slashing = false
@@ -182,11 +154,11 @@ local function onTouch(event)
 end
 
 local function tap(event)
-	print("tapped!")
+	print("tapped! | " .. jumpCount)
 	local vx, vy
 	vx, vy = character:getLinearVelocity()
 	print(vy)
-	if vy >= 0 and vy < 30 then
+	if vy > -30 and vy < 30 then
 		jumpCount = 0
 	end
 	if jumpCount < 2 then
