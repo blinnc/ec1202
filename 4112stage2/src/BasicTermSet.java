@@ -14,18 +14,18 @@ public class BasicTermSet {
 	private double bestCost;
 	private BasicTermSet leftChild = null;
 	private BasicTermSet rightChild = null;
-	private int[] selectivities;
+	private double[] selectivities;
+	private int setNum;
 	
 	/**
 	 * Constructor of the set.
 	 * @param nTerms - the number of terms that this set contains
 	 * @param tProduct - the total product of the selectivities that make up the set.
 	 */
-	public BasicTermSet(int nTerms, double tProduct)
+	public BasicTermSet(int setNum, double[] selectivities)
 	{
-		numTerms = nTerms;
-		totalProduct = tProduct;
-		selectivities = new int[numTerms];
+		this.setNum = setNum;
+		this.selectivities = selectivities;
 	}
 	
 	/**
