@@ -9,8 +9,8 @@ import java.util.StringTokenizer;
 /**
  * Databases 4112 / Project 2 / Stage 2 Algorithm implementation
  * 
- * @author Sean Wang
  * @author Jeff Sinckler/jcs2137
+ * @author Sean Wang
  *
  */
 public class stage2 {
