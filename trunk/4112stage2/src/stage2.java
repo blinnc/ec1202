@@ -160,7 +160,17 @@ public class stage2 {
 		    			continue;
 		    		}
 		    		
-		    		//TODO: Put stuff here
+		    		//TODO: Check metrics
+		    		
+		    		//TODO: Calculate combined cost
+		    		double cost = 0; // Fill this in
+		    		
+		    		BasicTermSet combinedSet = setList.get(rightChild.getSetNumber() + leftChild.getSetNumber() - 1);
+		    		
+		    		if(cost < combinedSet.getCost()) {
+		    			combinedSet.setCost(cost);
+		    			combinedSet.setChildren(leftChild, rightChild);
+		    		}
 		    	}
 		    }
 		    
