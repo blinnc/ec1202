@@ -6,8 +6,6 @@
  *
  */
 public class BasicTermSet {
-	
-	//data that the set needs to maintain
 	private int numTerms;
 	private double totalProduct;
 	private boolean noBranch = false;
@@ -24,13 +22,13 @@ public class BasicTermSet {
 	 * @param nTerms	the number of terms that this set contains
 	 * @param tProduct	the total product of the selectivities that make up the set.
 	 */
-	public BasicTermSet(int setNumber, double[] selectivityArray, int[] termArray)
-	{
+	public BasicTermSet(int setNumber, double[] selectivityArray, int[] termArray) {
 		setNum = setNumber;
 		selectivities = selectivityArray;
 		terms = termArray;
 		numTerms = selectivities.length;
 		
+		/* Calculate p */
 		totalProduct = 1;
 		for(double p : selectivities) {
 			totalProduct *= p;
@@ -44,8 +42,7 @@ public class BasicTermSet {
 	 * @param arrayWriteCost	the cost of writing an array
 	 * @param funcCost	the cost of applying a function to data
 	 */
-	public void calculateNoBranch(int arrayAccessCost, int logicalAnd, int arrayWriteCost, int funcCost)
-	{
+	public void calculateNoBranch(int arrayAccessCost, int logicalAnd, int arrayWriteCost, int funcCost) {
 		double totalCost = 0;
 		//kr
 		totalCost += numTerms*arrayAccessCost;
@@ -75,8 +72,7 @@ public class BasicTermSet {
 	 * @param branchMisp - the penalty associated with a branch misprediction
 	 * @param arrayWriteCost - the cost of writing data to the array
 	 */
-	public void calculateLogicalAnd(int arrayAccessCost, int logicalAnd, int ifTestCost, int branchMisp, int arrayWriteCost, int funcCost)
-	{
+	public void calculateLogicalAnd(int arrayAccessCost, int logicalAnd, int ifTestCost, int branchMisp, int arrayWriteCost, int funcCost) {
 		double totalCost = 0;
 		//kr
 		totalCost += numTerms*arrayAccessCost;
@@ -119,31 +115,7 @@ public class BasicTermSet {
 	 * @return	 false if the right metric dominates and this plan is sub-optimal, 
 	 * true if the left metric dominates and this plan is potentially optimal
 	 */
-	public boolean compareCMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, int ifTestCost)
-	{
-		/*double metricValue = (totalProduct - 1) / (double) funcCost;
-		double otherMetricValue = (comp.totalProduct - 1) / (double) funcCost;
-		
-		if(metricValue < otherMetricValue)
-		{
-			return 0;
-		}
-		else if(metricValue > otherMetricValue)
-		{
-			return 1;
-		}
-		else
-		{
-			if(totalProduct < comp.totalProduct)
-			{
-				return 0;
-			}
-			else
-			{
-				return 1;
-			}
-		}*/
-		
+	public boolean compareCMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, int ifTestCost) {
 		//tuple to hold the values for this metric
 		double[] thisMetric = new double[2];
 		//tuple to hold the values for comp parameter metric
@@ -203,36 +175,9 @@ public class BasicTermSet {
 	 * @return false if the right metric dominates and this plan is suboptimal, 
 	 * true if the left metric dominates and this plan is indeed optimal
 	 */
-	public boolean compareDMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, 
-			int ifTestCost)
-	{
-		/*double metricValue = (double) funcCost;
-		double otherMetricValue = (double) funcCost;
-		
-		if(totalProduct <= .5 && metricValue < otherMetricValue)
-		{
-			return 1;
-		}
-		else if(totalProduct <= .5 && metricValue == otherMetricValue)
-		{
-			if(totalProduct > comp.totalProduct)
-			{
-				return 0;
-			}
-			else
-			{
-				return 1;
-			}
-		}
-		else
-		{
-			return 0;
-		}*/
-		
+	public boolean compareDMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, int ifTestCost) {		
 		//tuple to hold the values for this metric
 		double[] thisMetric = new double[2];
-		//tuple to hold the values for comp parameter metric
-		double[] compMetric = new double[2];
 		
 		double temp = numTerms*arrayAccessCost + (numTerms - 1) * logicalAnd + ifTestCost;
 		for(int i = 0; i < numTerms; i++)
@@ -241,31 +186,6 @@ public class BasicTermSet {
 		}
 		thisMetric[0] = temp;
 		thisMetric[1] = totalProduct;
-		
-		/*BasicTermSet tempSet = comp;
-		while(tempSet.leftChild != null)
-		{
-			tempSet = tempSet.leftChild;
-		}
-		
-		temp = tempSet.numTerms*arrayAccessCost + (tempSet.numTerms - 1) * logicalAnd + ifTestCost;
-		for(int i = 0; i < tempSet.numTerms; i++)
-		{
-			temp += funcCost;
-		}
-		
-		compMetric[0] = temp;
-		compMetric[1] = tempSet.totalProduct;
-		
-		//if the cmetric of the left child is dominated by the cmetric of the right child...
-		if(thisMetric[0] < compMetric[0] && thisMetric[1] < compMetric[1])
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}*/
 		
 		boolean proceed = traverseTreeMetric(totalProduct, thisMetric, comp, arrayAccessCost, logicalAnd, ifTestCost, funcCost, true);
 		return proceed;
@@ -303,11 +223,6 @@ public class BasicTermSet {
 			}
 		}
 		
-		/*if(leftmostChild && traversed.leftChild == null)
-		{
-			return false;
-		}*/
-		
 		double[] compMetric = new double[2];
 		double temp = traversed.numTerms*arrayAccessCost + (traversed.numTerms - 1) * logicalAnd + ifTestCost;
 		for(int i = 0; i < traversed.numTerms; i++)
@@ -330,13 +245,16 @@ public class BasicTermSet {
 		}
 	}
 	
+	/**
+	 * Calculates the cost of a plan that combines this set with a given set
+	 * @param rightChild	the set to combine with
+	 * @param bMispredict	the cost of misprediction
+	 * @return				the cost of combining with a branching-AND
+	 */
 	public double calculateCombinedCost(BasicTermSet rightChild, int bMispredict)
 	{
 		double result;
 		double leftTotalProduct = getTotalProduct();
-		double f = fixedCost;
-		double mq = bMispredict * (leftTotalProduct <= .5 ? leftTotalProduct : 1 - leftTotalProduct);
-		double pC = leftTotalProduct * rightChild.getCost();
 		
 		result = fixedCost + bMispredict * 
 			(leftTotalProduct <= .5 ? leftTotalProduct : 1 - leftTotalProduct) +
@@ -345,36 +263,96 @@ public class BasicTermSet {
 		return result;
 	}
 	
-	private void setFixedCost(double value)
-	{
-		
+	/**
+	 * Set the fixed cost
+	 * @param value	the new fixed cost value
+	 */
+	private void setFixedCost(double value) {
 		fixedCost = value;
 	}
 	
+	/**
+	 * Gets the number representing this set
+	 * @return	the set number
+	 */
 	public int getSetNumber() {
 		return setNum;
 	}
 	
+	/**
+	 * Determines if this set shares any terms in common with another set
+	 * @param set	the set with which to compare
+	 * @return		true if at least 1 term is shared
+	 */
 	public boolean intersects(BasicTermSet set) {
 		return (setNum & set.getSetNumber()) > 0;
 	}
 	
+	/**
+	 * Gets the cost
+	 * @return	the cost
+	 */
 	public double getCost() {
 		return bestCost;
 	}
 	
+	/**
+	 * Sets the cost
+	 * @param newCost	the new cost
+	 */
 	public void setCost(double newCost) {
 		bestCost = newCost;
 	}
 	
+	/**
+	 * Sets the children
+	 * @param leftChild		the new left child
+	 * @param rightChild	the new right child
+	 */
 	public void setChildren(BasicTermSet leftChild, BasicTermSet rightChild) {
 		this.leftChild = leftChild;
 		this.rightChild = rightChild;
 		noBranch = false;
 	}
 	
+	/**
+	 * Gets the left child
+	 * @return	the left child
+	 */
+	public BasicTermSet getLeftChild() {
+		return leftChild;
+	}
+	
+	/**
+	 * Gets the right child
+	 * @return	the right child
+	 */
+	public BasicTermSet getRightChild() {
+		return rightChild;
+	}
+	
+	/**
+	 * Gets the product
+	 * @return the product
+	 */
 	public double getTotalProduct()
 	{
 		return totalProduct;
+	}
+	
+	/**
+	 * Gets the terms
+	 * @return the terms
+	 */
+	public int[] getTerms() {
+		return terms;
+	}
+	
+	/**
+	 * Gets the noBranch status
+	 * @return	true if this set used noBranch
+	 */
+	public boolean isNoBranch() {
+		return noBranch;
 	}
 }
