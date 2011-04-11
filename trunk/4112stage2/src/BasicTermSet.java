@@ -15,6 +15,7 @@ public class BasicTermSet {
 	private BasicTermSet leftChild = null;
 	private BasicTermSet rightChild = null;
 	private double[] selectivities;
+	private int[] terms;
 	private int setNum;
 	private double fixedCost;
 	
@@ -23,11 +24,17 @@ public class BasicTermSet {
 	 * @param nTerms	the number of terms that this set contains
 	 * @param tProduct	the total product of the selectivities that make up the set.
 	 */
-	public BasicTermSet(int setNum, double[] selectivities)
+	public BasicTermSet(int setNumber, double[] selectivityArray, int[] termArray)
 	{
-		this.setNum = setNum;
-		this.selectivities = selectivities;
+		setNum = setNumber;
+		selectivities = selectivityArray;
+		terms = termArray;
 		numTerms = selectivities.length;
+		
+		totalProduct = 1;
+		for(double p : selectivities) {
+			totalProduct *= p;
+		}
 	}
 	
 	/**
@@ -39,7 +46,7 @@ public class BasicTermSet {
 	 */
 	public void calculateNoBranch(int arrayAccessCost, int logicalAnd, int arrayWriteCost, int funcCost)
 	{
-		int totalCost = 0;
+		double totalCost = 0;
 		//kr
 		totalCost += numTerms*arrayAccessCost;
 		//(k - 1) * l
@@ -53,7 +60,7 @@ public class BasicTermSet {
 			totalCost += funcCost;
 		}
 		
-		if((double) totalCost < bestCost || bestCost == 0)
+		if(totalCost < bestCost || bestCost == 0)
 		{
 			bestCost = (double) totalCost;
 			noBranch = true;
@@ -70,7 +77,7 @@ public class BasicTermSet {
 	 */
 	public void calculateLogicalAnd(int arrayAccessCost, int logicalAnd, int ifTestCost, int branchMisp, int arrayWriteCost)
 	{
-		int totalCost = 0;
+		double totalCost = 0;
 		//kr
 		totalCost += numTerms*arrayAccessCost;
 		//(k - 1)l
@@ -93,7 +100,7 @@ public class BasicTermSet {
 		//p1 ... pk * a
 		totalCost *= arrayWriteCost * q;
 		
-		if((double) totalCost < bestCost || bestCost == 0)
+		if(totalCost < bestCost || bestCost == 0)
 		{
 			bestCost = (double) totalCost;
 			noBranch = false;
@@ -331,6 +338,7 @@ public class BasicTermSet {
 	public void setChildren(BasicTermSet leftChild, BasicTermSet rightChild) {
 		this.leftChild = leftChild;
 		this.rightChild = rightChild;
+		noBranch = false;
 	}
 	
 	public double getTotalProduct()
