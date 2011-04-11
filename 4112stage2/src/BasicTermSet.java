@@ -8,13 +8,13 @@
 public class BasicTermSet {
 	
 	//data that the set needs to maintain
-	int numTerms;
-	double totalProduct;
-	boolean noBranch = false;
-	double bestCost;
-	BasicTermSet leftChild = null;
-	BasicTermSet rightChild = null;
-	int[] selectivities;
+	private int numTerms;
+	private double totalProduct;
+	private boolean noBranch = false;
+	private double bestCost;
+	private BasicTermSet leftChild = null;
+	private BasicTermSet rightChild = null;
+	private int[] selectivities;
 	
 	/**
 	 * Constructor of the set.
