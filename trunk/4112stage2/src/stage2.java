@@ -137,6 +137,13 @@ public class stage2 {
 		    /* Find if Branching-AND plans are cheaper */
 		    for(BasicTermSet rightChild : setList) {
 		    	for(BasicTermSet leftChild : setList) {
+		    		int left = leftChild.getSetNumber();
+		    		int right = rightChild.getSetNumber();
+		    		
+		    		if(left == 10 && right == 17) {
+		    			System.out.println("");
+		    		}
+		    		
 		    		/* Check if the two sets share any elements */
 		    		if(rightChild.intersects(leftChild)) {
 		    			continue;
