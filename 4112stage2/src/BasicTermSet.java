@@ -287,4 +287,12 @@ public class BasicTermSet {
 			return 1;
 		}
 	}
+	
+	public int getSetNumber() {
+		return setNum;
+	}
+	
+	public boolean intersects(BasicTermSet set) {
+		return (setNum & set.getSetNumber()) > 0;
+	}
 }
