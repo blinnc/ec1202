@@ -182,7 +182,7 @@ public class BasicTermSet {
 		compMetric[1] = tempSet.totalProduct;
 		
 		//if the cmetric of the left child is dominated by the cmetric of the right child...
-		if(thisMetric[0] < compMetric[0] && thisMetric[1] < compMetric[1])
+		if(thisMetric[0] >= compMetric[0] && thisMetric[1] > compMetric[1])
 		{
 			return false;
 		}
@@ -334,10 +334,14 @@ public class BasicTermSet {
 	{
 		double result;
 		double leftTotalProduct = getTotalProduct();
+		double f = fixedCost;
+		double mq = bMispredict * (leftTotalProduct <= .5 ? leftTotalProduct : 1 - leftTotalProduct);
+		double pC = leftTotalProduct * rightChild.getCost();
+		
 		result = fixedCost + bMispredict * 
-			leftTotalProduct <= .5 ? leftTotalProduct : 1 - leftTotalProduct +
+			(leftTotalProduct <= .5 ? leftTotalProduct : 1 - leftTotalProduct) +
 			leftTotalProduct * rightChild.getCost();
-		//result = fixedCost + 
+		
 		return result;
 	}
 	
