@@ -39,7 +39,7 @@ public class stage2 {
 			}
 		}
 		
-		/* Fill setList */
+		/* Fill setList using bitmap */
 		ArrayList<BasicTermSet> setList = new ArrayList<BasicTermSet>();
 		
 		for(int j = 1; j < numSets; j++) {
@@ -136,26 +136,17 @@ public class stage2 {
 		    
 		    /* Find if Branching-AND plans are cheaper */
 		    for(BasicTermSet rightChild : setList) {
-		    	for(BasicTermSet leftChild : setList) {
-		    		int left = leftChild.getSetNumber();
-		    		int right = rightChild.getSetNumber();
-		    		
-		    		if(left == 10 && right == 17) {
-		    			System.out.println("");
-		    		}
-		    		
+		    	for(BasicTermSet leftChild : setList) {		    		
 		    		/* Check if the two sets share any elements */
 		    		if(rightChild.intersects(leftChild)) {
 		    			continue;
 		    		}
 		    		
 		    		/* Compare metrics */
-		    		if(!leftChild.compareCMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost))
-		    		{
+		    		if(!leftChild.compareCMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost)) {
 		    			continue;
 		    		}
-		    		if(!leftChild.compareDMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost))
-		    		{
+		    		if(!leftChild.compareDMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost)) {
 		    			continue;
 		    		}
 		    		
@@ -165,6 +156,7 @@ public class stage2 {
 		    		BasicTermSet combinedSet = setList.get(rightChild.getSetNumber() + leftChild.getSetNumber() - 1);
 		    		
 		    		if(cost < combinedSet.getCost()) {
+		    			/* Replace set info */
 		    			combinedSet.setCost(cost);
 		    			combinedSet.setChildren(leftChild, rightChild);
 		    		}
@@ -178,12 +170,111 @@ public class stage2 {
 		    System.out.println("======================================");
 		    System.out.println(query);
 		    System.out.println("--------------------------------------");
-		    //TODO: print out the code for the algorithm
+		    printPlan(top, true, 0);
 		    System.out.println("--------------------------------------");
-		    //TODO: print out the total cost from the big set
 		    System.out.println("Cost: " + top.getCost());
 		    
 	    }
 	}
+	
+	/**
+	 * Prints the optimal plan of a given set
+	 * @param set		The set for which to print the plan
+	 * @param isTop		true if this method is called externally
+	 * @param close		0 if this method is being called externally
+	 */
+	private static void printPlan(BasicTermSet set, boolean isTop, int close) {
+		if(set.isNoBranch()) {
+			/* This is the last AndTerm in the set */
+			if(isTop) {
+				printNoBranch(false, set.getTerms());
+			}
+			else {
+				String end = "";
+				for(int i = 0; i < close; i++) {
+					end += ")";
+				}
+				System.out.println(end + " {");
+				printNoBranch(true, set.getTerms());
+				System.out.println("}");
+			}
+		}
+		else {
+			BasicTermSet left = set.getLeftChild();	
+			BasicTermSet right = set.getRightChild();
+			
+			if(isTop) {
+				System.out.print("if");
+			}
+			else {
+				System.out.print(" && ");
+			}
+			
+			if(!right.isNoBranch() || left.getTerms().length > 1) {
+				System.out.print("(");
+				close++;
+			}
+			
+			/* Print left child, recurse on right child */
+			System.out.print(getAndTerm(left.getTerms(), !right.isNoBranch()));
+			printPlan(right, false, close);
+		}
+	}
+	
+	/**
+	 * Returns a formatted &Term
+	 * @param terms		an array of terms that should be combined
+	 * @param paren		true if the output should be surrounded by parenthesis
+	 * @return			a formatted String
+	 */
+	private static String getAndTerm(int[] terms, boolean paren) {
+		if(terms.length == 1) {
+			paren = false;
+		}
+		String chain = (paren ? "(" : "") + convert(terms[0]);
+		
+		for(int i = 1; i < terms.length; i++) {
+			chain += " & " + convert(terms[i]);
+		}
+		
+		return chain + (paren ? ")" : "");
+	}
+	
+	/**
+	 * Converts an integer into a term string
+	 * @param num	the number to convert
+	 * @return		a formatted String
+	 */
+	private static String convert(int num) {
+		return "t" + num + "[o" + num + "[i]]";
+	}
+	
+	/**
+	 * Prints nobranch lines
+	 * @param tab		true to indent the lines
+	 * @param terms		an array of terms that should be printed
+	 */
+	private static void printNoBranch(boolean tab, int[] terms) {
+		System.out.println((tab ? "\t" : "") + "answer[j] = i;");		
+		System.out.println((tab ? "\t" : "") + "j += " + getAndTerm(terms, true) + ";");
+	}
 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
