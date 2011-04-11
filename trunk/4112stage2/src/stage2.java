@@ -14,14 +14,6 @@ import java.util.StringTokenizer;
  *
  */
 public class stage2 {
-	
-	public static int arrayAccessCost;
-	public static int ifTestCost;
-	public static int logicalAndCost;
-	public static int bMispredictCost;
-	public static int arrayWriteCost;
-	public static int funcApplyCost;
-	public static int numFunctions;
 
 	public static double[] getCostList(int setNumber, double[] selectivities)
 	{
@@ -113,12 +105,12 @@ public class stage2 {
 		}
 		
 		//read in the actual values from the configuration file
-		arrayAccessCost = Integer.parseInt(properties.getProperty("r"));
-		ifTestCost = Integer.parseInt(properties.getProperty("t"));
-		logicalAndCost = Integer.parseInt(properties.getProperty("l"));
-		bMispredictCost = Integer.parseInt(properties.getProperty("m"));
-		arrayWriteCost = Integer.parseInt(properties.getProperty("a"));
-		funcApplyCost = Integer.parseInt(properties.getProperty("f"));
+		int arrayAccessCost = Integer.parseInt(properties.getProperty("r"));
+		int ifTestCost = Integer.parseInt(properties.getProperty("t"));
+		int logicalAndCost = Integer.parseInt(properties.getProperty("l"));
+		int bMispredictCost = Integer.parseInt(properties.getProperty("m"));
+		int arrayWriteCost = Integer.parseInt(properties.getProperty("a"));
+		int funcApplyCost = Integer.parseInt(properties.getProperty("f"));
 		
 		//Read in the query file
 		ArrayList<String> queryList = new ArrayList<String>();
@@ -149,42 +141,51 @@ public class stage2 {
 		    	selectivities[i] = Double.parseDouble(selectivityStrings[i]);
 		    }
 		    
-		    //loop that iterates over the selectivities and creates an extensive set. Needs work right now
-		    //TODO: Make this loop work...
-		    
-		    ArrayList<BasicTermSet> basicTermSets = getSetList(selectivities);
+		    //loop that iterates over the selectivities and creates an extensive set		    
+		    ArrayList<BasicTermSet> setList = getSetList(selectivities);
 		    
 		    //iterate through the list of sets previously created and keep the cheapest cost
-		    for(int i = 0; i < basicTermSets.size(); i++)
+		    for(int i = 0; i < setList.size(); i++)
 		    {
-		    	basicTermSets.get(i).calculateLogicalAnd(arrayAccessCost, logicalAndCost, 
+		    	setList.get(i).calculateLogicalAnd(arrayAccessCost, logicalAndCost, 
 		    			ifTestCost, bMispredictCost, arrayWriteCost);
-		    	basicTermSets.get(i).calculateNoBranch(arrayAccessCost, logicalAndCost, 
+		    	setList.get(i).calculateNoBranch(arrayAccessCost, logicalAndCost, 
 		    			arrayWriteCost, funcApplyCost);
 		    }
 		    
-		    //iterate through each set pair
-		    for(int i = 0; i < basicTermSets.size() - 1; i++)
-		    {
-		    	for(int j = i + 1; j < basicTermSets.size(); j++)
-		    	{
-		    		BasicTermSet leftChild = basicTermSets.get(i);
-		    		BasicTermSet rightChild = basicTermSets.get(j);
+		    for(BasicTermSet rightChild : setList) {
+		    	
+		    	for(BasicTermSet leftChild : setList) {
+		    		if(rightChild.intersects(leftChild)) {
+		    			continue;
+		    		}
 		    		
-		    		if(leftChild.compareCMetric(rightChild, funcApplyCost) == 1)
-		    		{
-		    			//do nothing
-		    		}
-		    		else if(leftChild.compareDMetric(rightChild, funcApplyCost) == 1)
-		    		{
-		    				//do nothing
-		    		}
-		    		else
-		    		{
-		    			//change the shit
-		    		}
+		    		//TODO: Put stuff here
 		    	}
 		    }
+		    
+//		    //iterate through each set pair
+//		    for(int i = 0; i < setList.size() - 1; i++)
+//		    {
+//		    	for(int j = i + 1; j < setList.size(); j++)
+//		    	{
+//		    		BasicTermSet leftChild = setList.get(i);
+//		    		BasicTermSet rightChild = setList.get(j);
+//		    		
+////		    		if(leftChild.compareCMetric(rightChild, funcApplyCost) == 1)
+////		    		{
+////		    			//do nothing
+////		    		}
+////		    		else if(leftChild.compareDMetric(rightChild, funcApplyCost) == 1)
+////		    		{
+////		    				//do nothing
+////		    		}
+////		    		else
+////		    		{
+////		    			//change the shit
+////		    		}
+//		    	}
+//		    }
 		    
 		    //print out the values (we may have to write to a file)
 		    System.out.println("====================");
