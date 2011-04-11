@@ -75,7 +75,7 @@ public class BasicTermSet {
 	 * @param branchMisp - the penalty associated with a branch misprediction
 	 * @param arrayWriteCost - the cost of writing data to the array
 	 */
-	public void calculateLogicalAnd(int arrayAccessCost, int logicalAnd, int ifTestCost, int branchMisp, int arrayWriteCost)
+	public void calculateLogicalAnd(int arrayAccessCost, int logicalAnd, int ifTestCost, int branchMisp, int arrayWriteCost, int funcCost)
 	{
 		double totalCost = 0;
 		//kr
@@ -85,20 +85,22 @@ public class BasicTermSet {
 		//t
 		totalCost += ifTestCost;
 		double q = 1.0;
-		double selectivityProduct = 1.0;
+		//double selectivityProduct = 1.0;
 		
 		//mq
 		for(int i = 0; i < numTerms; i++)
 		{
+			totalCost += funcCost;
 			q *= selectivities[i];
 		}
+		
 		if(q <= .5)
 			totalCost += branchMisp * q;
 		else
 			totalCost += branchMisp * (1 - q);
 		
 		//p1 ... pk * a
-		totalCost *= arrayWriteCost * q;
+		totalCost += arrayWriteCost * q;
 		
 		if(totalCost < bestCost || bestCost == 0)
 		{
@@ -156,6 +158,7 @@ public class BasicTermSet {
 			temp2 += funcCost;
 		}
 		
+		setFixedCost(temp2);
 		thisMetric[0] = temp / temp2;
 		thisMetric[1] = totalProduct;
 		
@@ -175,9 +178,8 @@ public class BasicTermSet {
 			temp2 += funcCost;
 		}
 		
-		setFixedCost(temp2);
 		compMetric[0] = temp / temp2;
-		compMetric[1] = totalProduct;
+		compMetric[1] = tempSet.totalProduct;
 		
 		//if the cmetric of the left child is dominated by the cmetric of the right child...
 		if(thisMetric[0] < compMetric[0] && thisMetric[1] < compMetric[1])
@@ -240,6 +242,31 @@ public class BasicTermSet {
 		thisMetric[0] = temp;
 		thisMetric[1] = totalProduct;
 		
+		/*BasicTermSet tempSet = comp;
+		while(tempSet.leftChild != null)
+		{
+			tempSet = tempSet.leftChild;
+		}
+		
+		temp = tempSet.numTerms*arrayAccessCost + (tempSet.numTerms - 1) * logicalAnd + ifTestCost;
+		for(int i = 0; i < tempSet.numTerms; i++)
+		{
+			temp += funcCost;
+		}
+		
+		compMetric[0] = temp;
+		compMetric[1] = tempSet.totalProduct;
+		
+		//if the cmetric of the left child is dominated by the cmetric of the right child...
+		if(thisMetric[0] < compMetric[0] && thisMetric[1] < compMetric[1])
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}*/
+		
 		boolean proceed = traverseTreeMetric(totalProduct, thisMetric, comp, arrayAccessCost, logicalAnd, ifTestCost, funcCost, true);
 		return proceed;
 	}
@@ -276,10 +303,10 @@ public class BasicTermSet {
 			}
 		}
 		
-		if(leftmostChild && traversed.leftChild == null)
+		/*if(leftmostChild && traversed.leftChild == null)
 		{
 			return false;
-		}
+		}*/
 		
 		double[] compMetric = new double[2];
 		double temp = traversed.numTerms*arrayAccessCost + (traversed.numTerms - 1) * logicalAnd + ifTestCost;
@@ -293,7 +320,7 @@ public class BasicTermSet {
 		
 		//if the totalProduct is less than or equal to .5 and the dmetric of the left child is dominated
 		//by the dmetric of this right child
-		if(product <= .5 && metric[0] < compMetric[0] && metric[1] < compMetric[1])
+		if(product <= 0.5 && metric[0] < compMetric[0] && metric[1] < compMetric[1])
 		{
 			return false;
 		}
@@ -310,6 +337,7 @@ public class BasicTermSet {
 		result = fixedCost + bMispredict * 
 			leftTotalProduct <= .5 ? leftTotalProduct : 1 - leftTotalProduct +
 			leftTotalProduct * rightChild.getCost();
+		//result = fixedCost + 
 		return result;
 	}
 	

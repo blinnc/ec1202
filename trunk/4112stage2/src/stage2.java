@@ -129,7 +129,7 @@ public class stage2 {
 		    for(int i = 0; i < setList.size(); i++)
 		    {
 		    	setList.get(i).calculateLogicalAnd(arrayAccessCost, logicalAndCost, 
-		    			ifTestCost, bMispredictCost, arrayWriteCost);
+		    			ifTestCost, bMispredictCost, arrayWriteCost, funcApplyCost);
 		    	setList.get(i).calculateNoBranch(arrayAccessCost, logicalAndCost, 
 		    			arrayWriteCost, funcApplyCost);
 		    }
