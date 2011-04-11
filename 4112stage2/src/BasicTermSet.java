@@ -26,6 +26,7 @@ public class BasicTermSet {
 	{
 		this.setNum = setNum;
 		this.selectivities = selectivities;
+		numTerms = selectivities.length;
 	}
 	
 	/**
@@ -294,5 +295,18 @@ public class BasicTermSet {
 	
 	public boolean intersects(BasicTermSet set) {
 		return (setNum & set.getSetNumber()) > 0;
+	}
+	
+	public double getCost() {
+		return bestCost;
+	}
+	
+	public void setCost(double newCost) {
+		bestCost = newCost;
+	}
+	
+	public void setChildren(BasicTermSet leftChild, BasicTermSet rightChild) {
+		this.leftChild = leftChild;
+		this.rightChild = rightChild;
 	}
 }
