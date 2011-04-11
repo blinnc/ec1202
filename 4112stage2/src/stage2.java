@@ -13,9 +13,12 @@ import java.util.Properties;
  *
  */
 public class stage2 {
-
 	
-	
+	/**
+	 * Generates a list of every possible set of terms in increasing order
+	 * @param selectivityArray	an array containing the selectivities of each term in the query
+	 * @return	an ArrayList of BasicTermSet objects, containing information about a set of terms
+	 */
 	public static ArrayList<BasicTermSet> getSetList(double[] selectivityArray) {
 		int numTerms = selectivityArray.length;
 		int numSets = (int)Math.pow(2, numTerms);
@@ -40,21 +43,25 @@ public class stage2 {
 		ArrayList<BasicTermSet> setList = new ArrayList<BasicTermSet>();
 		
 		for(int j = 1; j < numSets; j++) {
-			ArrayList<Double> termList = new ArrayList<Double>();
+			ArrayList<Double> sltList = new ArrayList<Double>();
+			ArrayList<Integer> termList = new ArrayList<Integer>();
 			
 			for(int i = 0; i < numTerms; i++) {
 				if(bitmap[i][j]) {
-					termList.add(new Double(selectivityArray[i]));
+					sltList.add(new Double(selectivityArray[i]));
+					termList.add(new Integer(i + 1));
 				}
 			}
 			
-			double[] termArray = new double[termList.size()];
+			double[] sltArray = new double[sltList.size()];
+			int[] termArray = new int[termList.size()];
 			
-			for(int i = 0; i < termList.size(); i++) {
+			for(int i = 0; i < sltList.size(); i++) {
+				sltArray[i] = sltList.get(i);
 				termArray[i] = termList.get(i);
 			}
 			
-			setList.add(new BasicTermSet(j, termArray));
+			setList.add(new BasicTermSet(j, sltArray, termArray));
 		}
 				
 		return setList;
@@ -66,11 +73,8 @@ public class stage2 {
 	 * @param args - takes the location of the query file as the first argument and the location
 	 * of the configuration file as the second query parameter
 	 */
-	public static void main(String[] args) {		
-		//some helper data
-		String queryData;
-		
-		//set up the properties file to read in the values for the algorithm
+	public static void main(String[] args) {				
+		/* Set up the properties file to store the values for the algorithm */
 		Properties properties = new Properties();
 		try {
 			properties.load(new FileInputStream(args[1]));
@@ -78,9 +82,10 @@ public class stage2 {
 		catch (IOException e)
 		{
 			System.out.println("Error: File not found at specified location");
+			System.exit(0);
 		}
 		
-		//read in the actual values from the configuration file
+		/* Store the values from the configuration file */
 		int arrayAccessCost = Integer.parseInt(properties.getProperty("r"));
 		int ifTestCost = Integer.parseInt(properties.getProperty("t"));
 		int logicalAndCost = Integer.parseInt(properties.getProperty("l"));
@@ -88,7 +93,7 @@ public class stage2 {
 		int arrayWriteCost = Integer.parseInt(properties.getProperty("a"));
 		int funcApplyCost = Integer.parseInt(properties.getProperty("f"));
 		
-		//Read in the query file
+		/* Read the query file */
 		ArrayList<String> queryList = new ArrayList<String>();
 		try {
 			//use buffering, reading one line at a time
@@ -107,20 +112,20 @@ public class stage2 {
 	        ex.printStackTrace();
 	    }
 	    
-	    //get the first set of selectivities from the query file
+	    /* Calculate the best plan for each query */
 	    for(String query : queryList) {
 		    
-		    //write the selectivity values from the query into an array of doubles
+		    /* Write the selectivity values from the query into an array of doubles */
 		    String[] selectivityStrings = query.split(" ");
 		    double[] selectivities = new double[selectivityStrings.length];
 		    for(int i = 0; i < selectivityStrings.length; i++) {
 		    	selectivities[i] = Double.parseDouble(selectivityStrings[i]);
 		    }
 		    
-		    //loop that iterates over the selectivities and creates an extensive set		    
+		    /* Create the ordered list of sets */
 		    ArrayList<BasicTermSet> setList = getSetList(selectivities);
 		    
-		    //iterate through the list of sets previously created and keep the cheapest cost
+		    /* Calculate the Logical-AND and NOBRANCH costs for each set */
 		    for(int i = 0; i < setList.size(); i++)
 		    {
 		    	setList.get(i).calculateLogicalAnd(arrayAccessCost, logicalAndCost, 
@@ -129,68 +134,47 @@ public class stage2 {
 		    			arrayWriteCost, funcApplyCost);
 		    }
 		    
+		    /* Find if Branching-AND plans are cheaper */
 		    for(BasicTermSet rightChild : setList) {
-		    	
 		    	for(BasicTermSet leftChild : setList) {
+		    		/* Check if the two sets share any elements */
 		    		if(rightChild.intersects(leftChild)) {
 		    			continue;
 		    		}
 		    		
-		    		//TODO: Check metric
+		    		/* Compare metrics */
 		    		if(!leftChild.compareCMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost))
 		    		{
-		    			//do nothing... sub-optimal
+		    			continue;
 		    		}
-		    		else if(!leftChild.compareDMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost))
+		    		if(!leftChild.compareDMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost))
 		    		{
-		    			//do nothing... sub-optimal
+		    			continue;
 		    		}
-		    		else
-		    		{
 		    		
-			    		//TODO: Calculate combined cost
-			    		double cost = leftChild.calculateCombinedCost(rightChild, bMispredictCost); // Fill this in
-			    		
-			    		BasicTermSet combinedSet = setList.get(rightChild.getSetNumber() + leftChild.getSetNumber() - 1);
-			    		
-			    		if(cost < combinedSet.getCost()) {
-			    			combinedSet.setCost(cost);
-			    			combinedSet.setChildren(leftChild, rightChild);
-			    		}
+		    		/* Calculate the cost of a Branching-AND plan */
+		    		double cost = leftChild.calculateCombinedCost(rightChild, bMispredictCost);
+		    		
+		    		BasicTermSet combinedSet = setList.get(rightChild.getSetNumber() + leftChild.getSetNumber() - 1);
+		    		
+		    		if(cost < combinedSet.getCost()) {
+		    			combinedSet.setCost(cost);
+		    			combinedSet.setChildren(leftChild, rightChild);
 		    		}
 		    	}
 		    }
 		    
-//		    //iterate through each set pair
-//		    for(int i = 0; i < setList.size() - 1; i++)
-//		    {
-//		    	for(int j = i + 1; j < setList.size(); j++)
-//		    	{
-//		    		BasicTermSet leftChild = setList.get(i);
-//		    		BasicTermSet rightChild = setList.get(j);
-//		    		
-////		    		if(leftChild.compareCMetric(rightChild, funcApplyCost) == 1)
-////		    		{
-////		    			//do nothing
-////		    		}
-////		    		else if(leftChild.compareDMetric(rightChild, funcApplyCost) == 1)
-////		    		{
-////		    				//do nothing
-////		    		}
-////		    		else
-////		    		{
-////		    			//change the shit
-////		    		}
-//		    	}
-//		    }
+		    
+		    BasicTermSet top = setList.get(setList.size() - 1);
 		    
 		    //print out the values (we may have to write to a file)
-		    System.out.println("====================");
-		    System.out.println("--------------------");
+		    System.out.println("======================================");
+		    System.out.println(query);
+		    System.out.println("--------------------------------------");
 		    //TODO: print out the code for the algorithm
-		    System.out.println("--------------------");
+		    System.out.println("--------------------------------------");
 		    //TODO: print out the total cost from the big set
-		    System.out.println("Cost: " + 0.0);
+		    System.out.println("Cost: " + top.getCost());
 		    
 	    }
 	}
