@@ -4,7 +4,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Properties;
-import java.util.StringTokenizer;
 
 /**
  * Databases 4112 / Project 2 / Stage 2 Algorithm implementation
@@ -15,30 +14,7 @@ import java.util.StringTokenizer;
  */
 public class stage2 {
 
-	public static double[] getCostList(int setNumber, double[] selectivities)
-	{
-		/*switch(setNumber) {
-		case 1:
-			break;
-		case 1:
-			break;
-		case 1:
-			break;
-		case 1:
-			break;
-		case 1:
-			break;
-		case 1:
-			break;
-		case 1:
-			break;
-		case 1:
-			break;
-		case 1:
-			break;
-		}*/
-		return null;
-	}
+	
 	
 	public static ArrayList<BasicTermSet> getSetList(double[] selectivityArray) {
 		int numTerms = selectivityArray.length;
@@ -160,16 +136,27 @@ public class stage2 {
 		    			continue;
 		    		}
 		    		
-		    		//TODO: Check metrics
+		    		//TODO: Check metric
+		    		if(!leftChild.compareCMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost))
+		    		{
+		    			//do nothing... sub-optimal
+		    		}
+		    		else if(!leftChild.compareDMetric(rightChild, funcApplyCost, arrayAccessCost, logicalAndCost, ifTestCost))
+		    		{
+		    			//do nothing... sub-optimal
+		    		}
+		    		else
+		    		{
 		    		
-		    		//TODO: Calculate combined cost
-		    		double cost = 0; // Fill this in
-		    		
-		    		BasicTermSet combinedSet = setList.get(rightChild.getSetNumber() + leftChild.getSetNumber() - 1);
-		    		
-		    		if(cost < combinedSet.getCost()) {
-		    			combinedSet.setCost(cost);
-		    			combinedSet.setChildren(leftChild, rightChild);
+			    		//TODO: Calculate combined cost
+			    		double cost = leftChild.calculateCombinedCost(rightChild, bMispredictCost); // Fill this in
+			    		
+			    		BasicTermSet combinedSet = setList.get(rightChild.getSetNumber() + leftChild.getSetNumber() - 1);
+			    		
+			    		if(cost < combinedSet.getCost()) {
+			    			combinedSet.setCost(cost);
+			    			combinedSet.setChildren(leftChild, rightChild);
+			    		}
 		    		}
 		    	}
 		    }

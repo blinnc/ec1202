@@ -16,6 +16,7 @@ public class BasicTermSet {
 	private BasicTermSet rightChild = null;
 	private double[] selectivities;
 	private int setNum;
+	private double fixedCost;
 	
 	/**
 	 * Constructor of the set.
@@ -106,10 +107,10 @@ public class BasicTermSet {
 	 * @param arrayAccessCost
 	 * @param logicalAnd
 	 * @param ifTestCost
-	 * @return	 0 if the right metric dominates and this plan is sub-optimal, 
-	 * 1 if the left metric dominates and this plan is potentially optimal
+	 * @return	 false if the right metric dominates and this plan is sub-optimal, 
+	 * true if the left metric dominates and this plan is potentially optimal
 	 */
-	public int compareCMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, int ifTestCost)
+	public boolean compareCMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, int ifTestCost)
 	{
 		/*double metricValue = (totalProduct - 1) / (double) funcCost;
 		double otherMetricValue = (comp.totalProduct - 1) / (double) funcCost;
@@ -139,41 +140,46 @@ public class BasicTermSet {
 		//tuple to hold the values for comp parameter metric
 		double[] compMetric = new double[2];
 		
-		//numerator of the metric
+		//numerator of the metric: (p - 1)
 		double temp = (totalProduct - 1);
-		//denominator of the metric
+		//denominator of the metric: fcost(E)
 		double temp2 = numTerms*arrayAccessCost + (numTerms - 1) * logicalAnd + ifTestCost;
 		for(int i = 0; i < numTerms; i++)
 		{
 			temp2 += funcCost;
 		}
+		
 		thisMetric[0] = temp / temp2;
 		thisMetric[1] = totalProduct;
 		
+		//traverse down the left children until we reach the leftmost
 		BasicTermSet tempSet = comp;
 		while(tempSet.leftChild != null)
 		{
 			tempSet = tempSet.leftChild;
 		}
-		//numerator of the comp metric
+		
+		//numerator of the leftmost child metric: (p - 1)
 		temp = tempSet.totalProduct - 1;
-		//denominator of the comp metric
+		//denominator of the leftmost child metric: fcost(E)
 		temp2 = tempSet.numTerms*arrayAccessCost + (tempSet.numTerms - 1) * logicalAnd + ifTestCost;
 		for(int i = 0; i < tempSet.numTerms; i++)
 		{
 			temp2 += funcCost;
 		}
+		
+		setFixedCost(temp2);
 		compMetric[0] = temp / temp2;
 		compMetric[1] = totalProduct;
 		
 		//if the cmetric of the left child is dominated by the cmetric of the right child...
 		if(thisMetric[0] < compMetric[0] && thisMetric[1] < compMetric[1])
 		{
-			return 0;
+			return false;
 		}
 		else
 		{
-			return 1;
+			return true;
 		}
 		
 	}
@@ -185,10 +191,10 @@ public class BasicTermSet {
 	 * @param arrayAccessCost
 	 * @param logicalAnd
 	 * @param ifTestCost
-	 * @return 0 if the right metric dominates and this plan is suboptimal, 
-	 * 1 if the left metric dominates and this plan is indeed optimal
+	 * @return false if the right metric dominates and this plan is suboptimal, 
+	 * true if the left metric dominates and this plan is indeed optimal
 	 */
-	public int compareDMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, 
+	public boolean compareDMetric(BasicTermSet comp, int funcCost, int arrayAccessCost, int logicalAnd, 
 			int ifTestCost)
 	{
 		/*double metricValue = (double) funcCost;
@@ -227,7 +233,7 @@ public class BasicTermSet {
 		thisMetric[0] = temp;
 		thisMetric[1] = totalProduct;
 		
-		int proceed = traverseTreeMetric(totalProduct, thisMetric, comp, arrayAccessCost, logicalAnd, ifTestCost, funcCost, true);
+		boolean proceed = traverseTreeMetric(totalProduct, thisMetric, comp, arrayAccessCost, logicalAnd, ifTestCost, funcCost, true);
 		return proceed;
 	}
 	
@@ -241,30 +247,31 @@ public class BasicTermSet {
 	 * @param ifTestCost	the cost of performing an if test
 	 * @param funcCost	the cost of applying a function to its argument
 	 * @param leftmostChild	a boolean representing whether the current node is potentially the leftmost child
-	 * @return
+	 * @return false if no node was found -- the plan is suboptimal; true if a node was found, meaning that the plan
+	 * is optimal
 	 */
-	public int traverseTreeMetric(double product, double[] metric, BasicTermSet traversed, 
+	public boolean traverseTreeMetric(double product, double[] metric, BasicTermSet traversed, 
 			int arrayAccessCost, int logicalAnd, int ifTestCost, int funcCost, boolean leftmostChild)
 	{
 		if(traversed.leftChild != null)
 		{
-			if(traverseTreeMetric(product, metric, traversed.leftChild, arrayAccessCost, logicalAnd, ifTestCost, funcCost, leftmostChild) == 1)
+			if(traverseTreeMetric(product, metric, traversed.leftChild, arrayAccessCost, logicalAnd, ifTestCost, funcCost, leftmostChild))
 			{
-				return 1;
+				return true;
 			}
 		}
 		
 		if(traversed.rightChild != null)
 		{
-			if(traverseTreeMetric(product, metric, traversed.rightChild, arrayAccessCost, logicalAnd, ifTestCost, funcCost, false) == 1)
+			if(traverseTreeMetric(product, metric, traversed.rightChild, arrayAccessCost, logicalAnd, ifTestCost, funcCost, false))
 			{
-				return 1;
+				return true;
 			}
 		}
 		
 		if(leftmostChild && traversed.leftChild == null)
 		{
-			return 0;
+			return false;
 		}
 		
 		double[] compMetric = new double[2];
@@ -281,12 +288,28 @@ public class BasicTermSet {
 		//by the dmetric of this right child
 		if(product <= .5 && metric[0] < compMetric[0] && metric[1] < compMetric[1])
 		{
-			return 0;
+			return false;
 		}
 		else
 		{
-			return 1;
+			return true;
 		}
+	}
+	
+	public double calculateCombinedCost(BasicTermSet rightChild, int bMispredict)
+	{
+		double result;
+		double leftTotalProduct = getTotalProduct();
+		result = fixedCost + bMispredict * 
+			leftTotalProduct <= .5 ? leftTotalProduct : 1 - leftTotalProduct +
+			leftTotalProduct * rightChild.getCost();
+		return result;
+	}
+	
+	private void setFixedCost(double value)
+	{
+		
+		fixedCost = value;
 	}
 	
 	public int getSetNumber() {
@@ -308,5 +331,10 @@ public class BasicTermSet {
 	public void setChildren(BasicTermSet leftChild, BasicTermSet rightChild) {
 		this.leftChild = leftChild;
 		this.rightChild = rightChild;
+	}
+	
+	public double getTotalProduct()
+	{
+		return totalProduct;
 	}
 }
