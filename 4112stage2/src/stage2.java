@@ -184,7 +184,7 @@ public class stage2 {
 	 * @param close		0 if this method is being called externally
 	 */
 	private static void printPlan(BasicTermSet set, boolean isTop, int close) {
-		if(set.isNoBranch()) {
+		if(set.getLeftChild() == null) {
 			/* This is the last AndTerm in the set */
 			if(isTop) {
 				printNoBranch(false, set.getTerms());
@@ -210,7 +210,7 @@ public class stage2 {
 				System.out.print(" && ");
 			}
 			
-			if(!right.isNoBranch() || left.getTerms().length > 1) {
+			if(right.getLeftChild() != null || left.getTerms().length > 1) {
 				System.out.print("(");
 				close++;
 			}
